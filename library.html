@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoundKit — Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #141720;
+      --card:      rgba(20, 25, 38, 0.80);
+      --border:    rgba(90, 200, 250, 0.15);
+      --ice:       #5ac8fa;
+      --ice-dim:   #2a6f8a;
+      --ice-glow:  rgba(90, 200, 250, 0.35);
+      --ice-soft:  rgba(90, 200, 250, 0.08);
+      --text:      #e8f4f8;
+      --muted:     #7a9ab0;
+      --gray:      #1e2430;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    #grid-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3rem;
+      height: 70px;
+      background: rgba(13, 15, 20, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: 1.4rem;
+      color: var(--ice);
+      text-shadow: 0 0 24px var(--ice-glow);
+      letter-spacing: 0.1em;
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--text); }
+
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: color 0.25s, text-shadow 0.25s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--ice);
+      text-shadow: 0 0 12px var(--ice-glow);
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      position: relative;
+      z-index: 1;
+      padding: 8rem 3rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-eyebrow {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      color: var(--ice);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 300;
+    }
+
+    /* ── CONTROLS BAR ── */
+    .controls {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 3rem 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+      max-width: 340px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    #search-input:focus {
+      border-color: var(--ice);
+      box-shadow: 0 0 16px var(--ice-glow);
+    }
+
+    #search-input::placeholder { color: var(--muted); }
+
+    .sort-select {
+      padding: 0.65rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.25s;
+    }
+
+    .sort-select:focus { border-color: var(--ice); }
+
+    /* ── GENRE FILTER ── */
+    .genre-filter {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 3rem 3rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .filter-btn {
+      padding: 0.45rem 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: all 0.22s;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--ice);
+      color: var(--ice);
+    }
+
+    .filter-btn.active {
+      background: var(--ice);
+      border-color: var(--ice);
+      color: #0d0f14;
+      font-weight: 700;
+      box-shadow: 0 0 20px var(--ice-glow);
+    }
+
+    /* ── TRACK COUNT ── */
+    .track-count {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 3rem 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .track-count span {
+      color: var(--ice);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+    }
+
+    /* ── SONG GRID ── */
+    #song-grid {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 3rem 4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── SONG CARD ── */
+    .song-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      animation: cardIn 0.5s ease both;
+    }
+
+    .song-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(90,200,250,0.07), transparent 65%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .song-card:hover {
+      border-color: rgba(90,200,250,0.4);
+      box-shadow: 0 8px 40px rgba(90,200,250,0.12);
+      transform: translateY(-3px);
+    }
+    .song-card:hover::after { opacity: 1; }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .card-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      color: var(--ice);
+      background: var(--ice-soft);
+    }
+
+    .card-duration {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* mini waveform */
+    .mini-wave {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-bottom: 1rem;
+    }
+
+    .mini-wave .b {
+      border-radius: 99px;
+      background: var(--ice);
+      width: 2.5px;
+      transition: height 0.3s, opacity 0.3s;
+      opacity: 0.4;
+    }
+
+    .song-card:hover .mini-wave .b {
+      animation: miniWave 0.8s ease-in-out infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes miniWave {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(1.8); }
+    }
+
+    .card-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+    }
+
+    .card-date {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-download {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem;
+      background: var(--ice);
+      color: #0d0f14;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: box-shadow 0.25s, transform 0.2s;
+    }
+
+    .btn-download:hover {
+      box-shadow: 0 0 24px var(--ice-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-download:active {
+      transform: scale(0.97);
+    }
+
+    .btn-play {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.65rem 1rem;
+      background: transparent;
+      color: var(--ice);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .btn-play:hover {
+      border-color: var(--ice);
+      box-shadow: 0 0 16px var(--ice-glow);
+    }
+
+    /* ── EMPTY STATE ── */
+    #empty-state {
+      display: none;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      font-size: 1rem;
+      grid-column: 1 / -1;
+    }
+
+    #empty-state .big { font-size: 3rem; margin-bottom: 1rem; }
+
+    /* ── DOWNLOAD ALL BAND ── */
+    #download {
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(180deg, transparent, rgba(90,200,250,0.05), transparent);
+      padding: 6rem 3rem;
+      text-align: center;
+    }
+
+    #download h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+
+    #download p {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+    }
+
+    .download-all-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 1rem 2.8rem;
+      background: var(--ice);
+      color: #0d0f14;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 0 40px var(--ice-glow);
+    }
+
+    .download-all-btn:hover {
+      background: #7dd8ff;
+      box-shadow: 0 0 70px rgba(90,200,250,0.65);
+      transform: translateY(-3px);
+    }
+
+    /* ── AUDIO PLAYER ── */
+    #player-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 200;
+      background: rgba(13,15,20,0.95);
+      backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 3rem;
+      display: none;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    #player-bar.visible { display: flex; }
+
+    .player-info { flex: 1; }
+    .player-name { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--ice); }
+    .player-genre { font-size: 0.75rem; color: var(--muted); }
+
+    #player-audio { display: none; }
+
+    .player-controls { display: flex; align-items: center; gap: 1rem; }
+
+    #play-pause-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--ice);
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #0d0f14;
+      box-shadow: 0 0 20px var(--ice-glow);
+      transition: transform 0.2s;
+    }
+
+    #play-pause-btn:hover { transform: scale(1.1); }
+
+    #close-player {
+      background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem; padding: 4px;
+      transition: color 0.2s;
+    }
+    #close-player:hover { color: var(--ice); }
+
+    .progress-wrap {
+      flex: 2;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    #progress-bar {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--gray);
+      border-radius: 99px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    #progress-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--ice);
+      box-shadow: 0 0 8px var(--ice-glow);
+      cursor: pointer;
+    }
+
+    .time-label { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: var(--muted); min-width: 32px; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: 1rem;
+      color: var(--ice);
+      text-shadow: 0 0 16px var(--ice-glow);
+    }
+
+    .footer-copy { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 9999;
+      background: var(--card);
+      border: 1px solid var(--ice);
+      border-radius: 10px;
+      padding: 0.8rem 1.4rem;
+      font-size: 0.85rem;
+      color: var(--ice);
+      box-shadow: 0 0 24px var(--ice-glow);
+      display: none;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      backdrop-filter: blur(12px);
+      transform: translateY(10px);
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    #toast.show {
+      display: block;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="grid-canvas"></canvas>
+
+<nav>
+  <a class="nav-logo" href="index.html">SOUND<span>KIT</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="library.html" class="active">Library</a></li>
+    <li><a href="#download">Download</a></li>
+  </ul>
+</nav>
+
+<div class="page-header">
+  <div class="page-eyebrow">100% Royalty Free</div>
+  <h1 class="page-title">The Library</h1>
+  <p class="page-sub">Browse, preview, and download. Every track is free. No strings attached.</p>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" id="search-input" placeholder="Search tracks…" />
+  </div>
+  <select class="sort-select" id="sort-select">
+    <option value="date-desc">Newest First</option>
+    <option value="date-asc">Oldest First</option>
+    <option value="name-asc">A → Z</option>
+    <option value="name-desc">Z → A</option>
+    <option value="duration-asc">Shortest</option>
+    <option value="duration-desc">Longest</option>
+  </select>
+</div>
+
+<!-- GENRE FILTER -->
+<div class="genre-filter" id="genre-filter">
+  <button class="filter-btn active" data-genre="all">All</button>
+</div>
+
+<div class="track-count" id="track-count"></div>
+
+<!-- SONG GRID -->
+<div id="song-grid">
+  <div id="empty-state">
+    <div class="big">🎵</div>
+    No tracks match that filter.
+  </div>
+</div>
+
+<!-- DOWNLOAD ALL -->
+<section id="download">
+  <h2>Grab <span style="color:var(--ice)">Everything</span></h2>
+  <p>Download the entire SoundKit library at once. Use it anywhere — no attribution required.</p>
+  <button class="download-all-btn" id="download-all-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Download All Tracks
+  </button>
+</section>
+
+<footer>
+  <div class="footer-logo">SOUNDKIT</div>
+  <div class="footer-copy">© 2025 SoundKit. All music free to use — no copyright.</div>
+</footer>
+
+<!-- AUDIO PLAYER BAR -->
+<div id="player-bar">
+  <audio id="player-audio"></audio>
+  <div class="player-info">
+    <div class="player-name" id="player-name">—</div>
+    <div class="player-genre" id="player-genre">—</div>
+  </div>
+  <div class="progress-wrap">
+    <span class="time-label" id="time-current">0:00</span>
+    <input type="range" id="progress-bar" min="0" max="100" value="0" />
+    <span class="time-label" id="time-total">0:00</span>
+  </div>
+  <div class="player-controls">
+    <button id="play-pause-btn">
+      <svg id="pp-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+    </button>
+    <button id="close-player">✕</button>
+  </div>
+</div>
+
+<div id="toast">✓ Download Started</div>
+
+<script>
+  /* ─── GRID CANVAS ─── */
+  const canvas = document.getElementById('grid-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  let t = 0;
+  (function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const sp = 60, cols = Math.ceil(canvas.width / sp) + 2, rows = Math.ceil(canvas.height / sp) + 2;
+    const ox = (t * 0.3) % sp, oy = (t * 0.15) % sp;
+    for (let c = -1; c < cols; c++) for (let r = -1; r < rows; r++) {
+      const x = c * sp - ox, y = r * sp - oy;
+      const g = Math.sin(t * 0.02 + c * 0.5 + r * 0.3) * 0.5 + 0.5;
+      ctx.globalAlpha = 0.04 + g * 0.05;
+      ctx.strokeStyle = 'rgba(90,200,250,0.5)';
+      ctx.strokeRect(x, y, sp, sp);
+      if (c % 3 === 0 && r % 3 === 0) {
+        const p = Math.sin(t * 0.03 + c * r * 0.1) * 0.5 + 0.5;
+        ctx.globalAlpha = p * 0.35;
+        ctx.fillStyle = '#5ac8fa';
+        ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1; t++;
+    requestAnimationFrame(drawGrid);
+  })();
+
+  /* ─── CSV PARSER ─── */
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1).map(line => {
+      const cols = line.split(',');
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = (cols[i] || '').trim());
+      return obj;
+    });
+  }
+
+  /* ─── WAVEFORM HEIGHTS GENERATOR ─── */
+  function randWave(seed) {
+    const h = [];
+    let s = seed;
+    for (let i = 0; i < 22; i++) {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      h.push(6 + Math.abs(s % 28));
+    }
+    return h;
+  }
+
+  /* ─── FORMAT SECONDS ─── */
+  function fmt(s) {
+    s = Math.floor(s);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  /* ─── DURATION TO SECONDS ─── */
+  function durToSec(dur) {
+    const [m, s] = dur.split(':').map(Number);
+    return m * 60 + s;
+  }
+
+  /* ─── STATE ─── */
+  let songs = [];
+  let filtered = [];
+  let activeGenre = 'all';
+  let searchQuery = '';
+  let sortOrder = 'date-desc';
+  let currentSong = null;
+  let isPlaying = false;
+
+  /* ─── BUILD GENRE BUTTONS ─── */
+  function buildGenreFilters(genres) {
+    const bar = document.getElementById('genre-filter');
+    bar.innerHTML = '<button class="filter-btn active" data-genre="all">All</button>';
+    genres.forEach(g => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.genre = g.toLowerCase();
+      btn.textContent = g;
+      bar.appendChild(btn);
+    });
+    bar.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeGenre = btn.dataset.genre;
+        renderSongs();
+      });
+    });
+  }
+
+  /* ─── CARD HTML ─── */
+  function createCard(song, idx) {
+    const card = document.createElement('div');
+    card.className = 'song-card';
+    card.style.animationDelay = (idx * 0.05) + 's';
+
+    const wHeights = randWave(song.name.length * 37 + song.genre.length * 13);
+    const waveBars = wHeights.map((h, i) =>
+      `<div class="b" style="height:${h}px;animation-delay:${(i * 0.06).toFixed(2)}s"></div>`
+    ).join('');
+
+    const audioPath = `audio/${song.name} - ${song.genre}.mp3`;
+    const downloadName = `${song.name} - SoundKit.mp3`;
+
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-badge">${song.genre}</span>
+        <span class="card-duration">${song.duration}</span>
+      </div>
+      <div class="mini-wave">${waveBars}</div>
+      <div class="card-name">${song.name}</div>
+      <div class="card-date">Added ${formatDate(song.date_added)}</div>
+      <div class="card-actions">
+        <a class="btn-download"
+           href="${audioPath}"
+           download="${downloadName}"
+           onclick="showToast()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download
+        </a>
+        <button class="btn-play" data-path="${audioPath}" data-name="${song.name}" data-genre="${song.genre}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    // Mouse glow effect
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width * 100).toFixed(1);
+      const y = ((e.clientY - r.top) / r.height * 100).toFixed(1);
+      card.style.setProperty('--mx', x + '%');
+      card.style.setProperty('--my', y + '%');
+    });
+
+    // Play button
+    card.querySelector('.btn-play').addEventListener('click', e => {
+      const btn = e.currentTarget;
+      playTrack(btn.dataset.path, btn.dataset.name, btn.dataset.genre);
+    });
+
+    return card;
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[+m - 1]} ${+day}, ${y}`;
+  }
+
+  /* ─── SORT SONGS ─── */
+  function sortSongs(arr) {
+    return [...arr].sort((a, b) => {
+      switch (sortOrder) {
+        case 'name-asc':  return a.name.localeCompare(b.name);
+        case 'name-desc': return b.name.localeCompare(a.name);
+        case 'date-asc':  return a.date_added.localeCompare(b.date_added);
+        case 'date-desc': return b.date_added.localeCompare(a.date_added);
+        case 'duration-asc':  return durToSec(a.duration) - durToSec(b.duration);
+        case 'duration-desc': return durToSec(b.duration) - durToSec(a.duration);
+        default: return 0;
+      }
+    });
+  }
+
+  /* ─── RENDER ─── */
+  function renderSongs() {
+    filtered = songs.filter(s => {
+      const genreMatch = activeGenre === 'all' || s.genre.toLowerCase() === activeGenre;
+      const nameMatch = s.name.toLowerCase().includes(searchQuery) || s.genre.toLowerCase().includes(searchQuery);
+      return genreMatch && nameMatch;
+    });
+    filtered = sortSongs(filtered);
+
+    const grid = document.getElementById('song-grid');
+    grid.innerHTML = '';
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.id = 'empty-state';
+      empty.style.display = 'block';
+      empty.innerHTML = '<div class="big">🎵</div>No tracks match that filter.';
+      grid.appendChild(empty);
+    } else {
+      filtered.forEach((song, i) => grid.appendChild(createCard(song, i)));
+    }
+
+    document.getElementById('track-count').innerHTML =
+      `<span>${filtered.length}</span> track${filtered.length !== 1 ? 's' : ''} shown`;
+  }
+
+  /* ─── AUDIO PLAYER ─── */
+  const audio = document.getElementById('player-audio');
+  const playerBar = document.getElementById('player-bar');
+  const playerName = document.getElementById('player-name');
+  const playerGenre = document.getElementById('player-genre');
+  const ppBtn = document.getElementById('play-pause-btn');
+  const ppIcon = document.getElementById('pp-icon');
+  const progressBar = document.getElementById('progress-bar');
+  const timeCurrent = document.getElementById('time-current');
+  const timeTotal = document.getElementById('time-total');
+
+  const PLAY_SVG = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+  const PAUSE_SVG = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+
+  function playTrack(path, name, genre) {
+    audio.src = path;
+    playerName.textContent = name;
+    playerGenre.textContent = genre;
+    playerBar.classList.add('visible');
+    audio.play().then(() => {
+      isPlaying = true;
+      ppIcon.innerHTML = PAUSE_SVG;
+    }).catch(() => {
+      // no file exists in demo — still show bar
+      ppIcon.innerHTML = PLAY_SVG;
+    });
+    currentSong = { path, name, genre };
+  }
+
+  ppBtn.addEventListener('click', () => {
+    if (audio.paused) {
+      audio.play();
+      isPlaying = true;
+      ppIcon.innerHTML = PAUSE_SVG;
+    } else {
+      audio.pause();
+      isPlaying = false;
+      ppIcon.innerHTML = PLAY_SVG;
+    }
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    if (!isNaN(audio.duration)) {
+      progressBar.value = (audio.currentTime / audio.duration) * 100;
+      timeCurrent.textContent = fmt(audio.currentTime);
+    }
+  });
+
+  audio.addEventListener('loadedmetadata', () => {
+    timeTotal.textContent = fmt(audio.duration);
+  });
+
+  audio.addEventListener('ended', () => {
+    ppIcon.innerHTML = PLAY_SVG;
+    isPlaying = false;
+    progressBar.value = 0;
+  });
+
+  progressBar.addEventListener('input', () => {
+    if (!isNaN(audio.duration)) {
+      audio.currentTime = (progressBar.value / 100) * audio.duration;
+    }
+  });
+
+  document.getElementById('close-player').addEventListener('click', () => {
+    audio.pause();
+    playerBar.classList.remove('visible');
+    isPlaying = false;
+    ppIcon.innerHTML = PLAY_SVG;
+  });
+
+  /* ─── TOAST ─── */
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+  window.showToast = showToast;
+
+  /* ─── DOWNLOAD ALL ─── */
+  document.getElementById('download-all-btn').addEventListener('click', () => {
+    filtered.forEach((song, i) => {
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = `audio/${song.name} - ${song.genre}.mp3`;
+        a.download = `${song.name} - SoundKit.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }, i * 300);
+    });
+    showToast();
+  });
+
+  /* ─── SEARCH ─── */
+  document.getElementById('search-input').addEventListener('input', e => {
+    searchQuery = e.target.value.toLowerCase();
+    renderSongs();
+  });
+
+  /* ─── SORT ─── */
+  document.getElementById('sort-select').addEventListener('change', e => {
+    sortOrder = e.target.value;
+    renderSongs();
+  });
+
+  /* ─── LOAD CSV ─── */
+  fetch('songs.csv')
+    .then(r => {
+      if (!r.ok) throw new Error('no csv');
+      return r.text();
+    })
+    .then(text => {
+      songs = parseCSV(text);
+      const genres = [...new Set(songs.map(s => s.genre))].sort();
+      buildGenreFilters(genres);
+
+      // check URL param for pre-selected genre
+      const urlParams = new URLSearchParams(location.search);
+      const gParam = urlParams.get('genre');
+      if (gParam) {
+        activeGenre = gParam.toLowerCase();
+        setTimeout(() => {
+          document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.genre === activeGenre);
+          });
+        }, 100);
+      }
+      renderSongs();
+    })
+    .catch(() => {
+      // Fallback demo data if CSV can't be fetched (direct file open)
+      songs = [
+        { name: 'Midnight Drip',  genre: 'Trap',       duration: '2:34', date_added: '2025-01-10' },
+        { name: 'Cold Rain',      genre: 'Lo-Fi',      duration: '3:12', date_added: '2025-01-12' },
+        { name: 'Glass City',     genre: 'Ambient',    duration: '4:05', date_added: '2025-01-15' },
+        { name: 'Neon Pulse',     genre: 'Electronic', duration: '2:58', date_added: '2025-01-18' },
+        { name: 'Ashes of Gold',  genre: 'Cinematic',  duration: '3:45', date_added: '2025-01-20' },
+        { name: 'Street Gospel',  genre: 'Hip-Hop',    duration: '2:47', date_added: '2025-01-22' },
+        { name: 'Frostbite',      genre: 'Drill',      duration: '2:21', date_added: '2025-01-25' },
+        { name: 'Velvet Dark',    genre: 'R&B',        duration: '3:30', date_added: '2025-01-28' },
+        { name: 'Hollow Echo',    genre: 'Lo-Fi',      duration: '3:55', date_added: '2025-02-01' },
+        { name: 'Thunder Code',   genre: 'Trap',       duration: '2:15', date_added: '2025-02-03' },
+        { name: 'Starfield',      genre: 'Ambient',    duration: '5:10', date_added: '2025-02-06' },
+        { name: 'Deep Cut',       genre: 'Hip-Hop',    duration: '3:02', date_added: '2025-02-09' },
+      ];
+      const genres = [...new Set(songs.map(s => s.genre))].sort();
+      buildGenreFilters(genres);
+      renderSongs();
+    });
+</script>
+</body>
+</html>
