@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://soundkit.snproductions.us/sitemap.xml
