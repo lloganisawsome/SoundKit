@@ -1,9 +1,11 @@
-name,genre,duration,date_added,mp3_size,mp3_bytes,wav_estimate,loopable
-2000,EDM,0:15,2026-05-27,588 KB,601978,2.5 MB,yes
-Chill vibes,House,0:15,2026-05-27,597 KB,611596,2.5 MB,yes
-Dusty Loop,Boom Bap,0:21,2026-05-27,835 KB,855437,3.5 MB,yes
-Elevated,House,0:08,2026-05-27,295 KB,302033,1.3 MB,yes
-Floating city,House USE NAME FOR OTHER SONG,0:15,2026-05-27,597 KB,611596,2.5 MB,yes
-Neon Circuit,EDM,0:08,2026-05-27,294 KB,301498,1.3 MB,yes
-The Cost Is Correct,TCIC,0:15,2026-05-27,594 KB,608188,2.5 MB,yes
-Timeflow,EDM,0:15,2026-05-27,588 KB,601919,2.5 MB,yes
+name,genre,duration,date_added
+2000,EDM,0:15,2026-07-01
+Chill vibes,House,0:15,2026-07-01
+Dusty Loop,Boom Bap,0:21,2026-07-01
+Electric Groove,EDM,0:15,2026-07-01
+Elevated,House,0:08,2026-07-01
+Floating city,LOFI,0:15,2026-07-01
+Neon Circuit,EDM,0:08,2026-07-01
+The Cost Is Correct,TCIC,0:15,2026-07-01
+Timeflow,EDM,0:15,2026-07-01
+Velvet Motion,Hip Hop,0:15,2026-07-01
